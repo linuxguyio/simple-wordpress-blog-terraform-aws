@@ -5,6 +5,10 @@
 # Terraform lockfile
 .terraform.lock.hcl
 
+.terraform
+*.tfstate.backup
+
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
