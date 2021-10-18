@@ -95,10 +95,10 @@ resource "aws_internet_gateway" "my-ig" {
 
 # Add route to the main route table of blog vpc
 resource "aws_route" "public-subnet-route" {
-  route_table_id = "rtb-0120e118bde98e977"
+  route_table_id         = aws_vpc.vpc-wp-blog.main_route_table_id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id = aws_internet_gateway.my-ig.id
-  
+  gateway_id             = aws_internet_gateway.my-ig.id
+
 }
 
 # Create a webserver instance in public subnet
@@ -108,8 +108,10 @@ resource "aws_instance" "webserver-instance" {
   availability_zone           = var.az
   subnet_id                   = aws_subnet.public-subnet.id
   associate_public_ip_address = true
-  depends_on                  = [aws_security_group.webserver-sg]
-  vpc_security_group_ids      = ["sg-085e18fce34ddcc2d"]
+  depends_on = [aws_security_group.webserver-sg,
+    aws_route.public-subnet-route
+  ]
+  vpc_security_group_ids = ["${aws_security_group.webserver-sg.id}"]
 
   user_data = <<EOF
         #!/bin/bash
