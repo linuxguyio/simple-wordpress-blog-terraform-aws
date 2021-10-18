@@ -16,3 +16,10 @@ variable "az" {
   type        = string
   default     = "ap-southeast-2b"
 }
+
+variable "webserver_instance_type" {
+    description = "instance type for webserver"
+    type = string
+    default = "t2.micro"
+  
+}
