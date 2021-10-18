@@ -40,7 +40,7 @@ resource "aws_subnet" "private-subnet" {
   }
 }
 
-# Another subnet in different az for meeting AZ coverage requirement 
+# Another subnet in different az for meeting AZ coverage requirement for db instance
 resource "aws_subnet" "private-subnet-2" {
   vpc_id            = aws_vpc.vpc-wp-blog.id
   cidr_block        = "10.0.40.0/24"
