@@ -40,6 +40,18 @@ resource "aws_subnet" "private-subnet" {
   }
 }
 
+# Another subnet in different az for meeting AZ coverage requirement 
+resource "aws_subnet" "private-subnet-2" {
+  vpc_id            = aws_vpc.vpc-wp-blog.id
+  cidr_block        = "10.0.40.0/24"
+  availability_zone = "ap-southeast-2a"
+
+  tags = {
+    "Name" = "private-subnet-2"
+  }
+}
+
+
 # Create a security group rule for webserver
 resource "aws_security_group" "webserver-sg" {
   name        = "webserver-sg"
@@ -78,6 +90,7 @@ resource "aws_security_group" "webserver-sg" {
 resource "aws_security_group" "database-sg" {
   name        = "database-sg"
   description = "security group for database in private subnet"
+  vpc_id      = aws_vpc.vpc-wp-blog.id
 
   tags = {
     "Name" = "database"
@@ -122,9 +135,36 @@ resource "aws_instance" "webserver-instance" {
         echo "<h1>Hello from $(hostname -f)</h1>" > /var/www/html/index.html
   EOF
 
+}
 
-
+# Create a db subnet group
+resource "aws_db_subnet_group" "mydb-subnet-group" {
+  name       = "db-subnet-group"
+  subnet_ids = [aws_subnet.private-subnet.id,aws_subnet.private-subnet-2.id]
+  tags = {
+    "Name" = "My db subnet group"
+  }
 }
 
 # Create a database instance in private subnet
+resource "aws_db_instance" "blog-database" {
+  engine              = "mysql"
+  instance_class      = "db.t2.micro"
+  engine_version      = "8.0.23"
+  name                = "DbWp"
+  username            = var.db_username
+  password            = var.db_password
+  allocated_storage   = 10
+  publicly_accessible = false
+  skip_final_snapshot = true
+  depends_on = [
+    aws_db_subnet_group.mydb-subnet-group
+  ]
+  vpc_security_group_ids = ["${aws_security_group.database-sg.id}"]
+  db_subnet_group_name = aws_db_subnet_group.mydb-subnet-group.name
+  identifier = "blog-db-instance"
+  tags = {
+    "Name" = "my-wp-database"
+  }
+}
 
