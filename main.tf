@@ -20,7 +20,7 @@ resource "aws_vpc" "vpc-wp-blog" {
   }
 }
 
-# Create a public subnet webserver
+# Create a public subnet for webserver
 resource "aws_subnet" "public-subnet" {
   vpc_id            = aws_vpc.vpc-wp-blog.id
   cidr_block        = "10.0.20.0/24"
@@ -60,7 +60,13 @@ resource "aws_security_group" "webserver-sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
+  egress {
+    description = "allow all outbound traffics"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   tags = {
     Name = "webserver"
@@ -78,13 +84,32 @@ resource "aws_security_group" "database-sg" {
   }
 }
 
+# Create an internet gateway for blog VPC
+resource "aws_internet_gateway" "my-ig" {
+  vpc_id = aws_vpc.vpc-wp-blog.id
+
+  tags = {
+    "Name" = "blog-ig"
+  }
+}
+
+# Add route to the main route table of blog vpc
+resource "aws_route" "public-subnet-route" {
+  route_table_id = "rtb-0120e118bde98e977"
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id = aws_internet_gateway.my-ig.id
+  
+}
+
 # Create a webserver instance in public subnet
 resource "aws_instance" "webserver-instance" {
   ami                         = "ami-05c029a4b57edda9e"
   instance_type               = var.webserver_instance_type
   availability_zone           = var.az
+  subnet_id                   = aws_subnet.public-subnet.id
   associate_public_ip_address = true
-  
+  depends_on                  = [aws_security_group.webserver-sg]
+  vpc_security_group_ids      = ["sg-085e18fce34ddcc2d"]
 
   user_data = <<EOF
         #!/bin/bash
