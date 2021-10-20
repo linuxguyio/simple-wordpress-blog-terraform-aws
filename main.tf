@@ -86,11 +86,20 @@ resource "aws_security_group" "webserver-sg" {
 
 }
 # Create a security group rule for database instance
-# By default deny all
+# Open traffic to port 3306 from webserver private ip 
 resource "aws_security_group" "database-sg" {
   name        = "database-sg"
   description = "security group for database in private subnet"
   vpc_id      = aws_vpc.vpc-wp-blog.id
+
+  ingress {
+    description = "allow port 3306 from our webserver private ip"
+    from_port = 3306
+    to_port = 3306
+    protocol = "tcp"
+    cidr_blocks = ["${aws_instance.webserver-instance.private_ip}/32"]
+
+  }
 
   tags = {
     "Name" = "database"
@@ -114,9 +123,10 @@ resource "aws_route" "public-subnet-route" {
 
 }
 
+
 # Create a webserver instance in public subnet
 resource "aws_instance" "webserver-instance" {
-  ami                         = "ami-05c029a4b57edda9e"
+  ami                         = var.image_id
   instance_type               = var.webserver_instance_type
   availability_zone           = var.az
   subnet_id                   = aws_subnet.public-subnet.id
@@ -140,7 +150,7 @@ resource "aws_instance" "webserver-instance" {
 # Create a db subnet group
 resource "aws_db_subnet_group" "mydb-subnet-group" {
   name       = "db-subnet-group"
-  subnet_ids = [aws_subnet.private-subnet.id,aws_subnet.private-subnet-2.id]
+  subnet_ids = [aws_subnet.private-subnet.id, aws_subnet.private-subnet-2.id]
   tags = {
     "Name" = "My db subnet group"
   }
@@ -161,8 +171,8 @@ resource "aws_db_instance" "blog-database" {
     aws_db_subnet_group.mydb-subnet-group
   ]
   vpc_security_group_ids = ["${aws_security_group.database-sg.id}"]
-  db_subnet_group_name = aws_db_subnet_group.mydb-subnet-group.name
-  identifier = "blog-db-instance"
+  db_subnet_group_name   = aws_db_subnet_group.mydb-subnet-group.name
+  identifier             = "blog-db-instance"
   tags = {
     "Name" = "my-wp-database"
   }

@@ -1,3 +1,9 @@
+
+variable "image_id" {
+  description = "image id for the webserver instance"
+  type        = string
+
+}
 variable "app_region" {
   description = "this is the region where our blog will be deployed"
   type        = string
@@ -18,20 +24,20 @@ variable "az" {
 }
 
 variable "webserver_instance_type" {
-    description = "instance type for webserver"
-    type = string
-    default = "t2.micro"
-  
+  description = "instance type for webserver"
+  type        = string
+  default     = "t2.micro"
+
 }
 
 variable "db_username" {
   description = "database username"
-  type = string
-  sensitive = true
+  type        = string
+  sensitive   = true
 }
 
 variable "db_password" {
   description = "database password"
-  type = string
-  sensitive = true
+  type        = string
+  sensitive   = true
 }
