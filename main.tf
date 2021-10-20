@@ -6,6 +6,15 @@ terraform {
     }
   }
 }
+terraform {
+  backend "remote" {
+    organization = "example-org-324555"
+
+    workspaces {
+      name = "my-wordpress"
+    }
+  }
+}
 
 # Configure the AWS Provider
 provider "aws" {
@@ -94,9 +103,9 @@ resource "aws_security_group" "database-sg" {
 
   ingress {
     description = "allow port 3306 from our webserver private ip"
-    from_port = 3306
-    to_port = 3306
-    protocol = "tcp"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
     cidr_blocks = ["${aws_instance.webserver-instance.private_ip}/32"]
 
   }
@@ -177,4 +186,3 @@ resource "aws_db_instance" "blog-database" {
     "Name" = "my-wp-database"
   }
 }
-
